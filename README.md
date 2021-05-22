@@ -2,7 +2,7 @@
 
 Inside the original nu-microbit-base repository, run the following commands:
 ```
-$ git remote rename origin upstream`
+$ git remote rename origin upstream
 $ git remote add origin https://github.com/zhuk48/ce346_final_project.git 
 ```
 This sets this fork as the main branch for pulls and commits, so we don't
