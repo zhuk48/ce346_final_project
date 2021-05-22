@@ -67,7 +67,10 @@ $ miniterm /dev/ttyACM0 38400
 ```
 
 ## Commiting changes
+
 After making changes, run the following commands to update code on GitHub
+```
 `git add .`
 `git commit -m "COMMIT MESSAGE"`
 `git push origin main`
+```
