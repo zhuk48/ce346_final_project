@@ -61,7 +61,6 @@ To build an application, use `make` inside of the application's directory.
 The Micro:bit v2 prints information through a serial port at 38400 baud. You
 can connect with any serial terminal, but miniterm comes with pyserial and
 works pretty well for this.
-
 ```
 $ miniterm /dev/ttyACM0 38400
 ```
@@ -70,8 +69,9 @@ $ miniterm /dev/ttyACM0 38400
 
 Inside the original nu-microbit-base repository, run the following commands:
 
-```
-$ git remote 
+`$ git remote rename origin upstream`
+This is to prevent us from comitting to the main branch on accident!
+` git remote add origin 
 
 ## Commiting changes
 
