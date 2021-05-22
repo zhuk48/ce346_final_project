@@ -15,9 +15,9 @@ Get most up to date code from Github:
 $ git pull
 ```
 
-## AFter making changes
+## After making changes
 
-After making changes, run the following commands to update code on GitHub
+After making changes, run the following commands to update code on GitHub:
 ```
 $ git add .
 $ git commit -m "COMMIT MESSAGE"
