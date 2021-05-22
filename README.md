@@ -66,11 +66,18 @@ works pretty well for this.
 $ miniterm /dev/ttyACM0 38400
 ```
 
+## Initial Setup
+
+Inside the original nu-microbit-base repository, run the following commands:
+
+```
+$ git remote 
+
 ## Commiting changes
 
 After making changes, run the following commands to update code on GitHub
 ```
-`git add .`
-`git commit -m "COMMIT MESSAGE"`
-`git push origin main`
+$ git add .
+$ git commit -m "COMMIT MESSAGE"
+$ git push origin main
 ```
