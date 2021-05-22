@@ -18,6 +18,8 @@ int main(void) {
   led_matrix_init();
 
   // call other functions here
+  char text1[7] = "ABCDEFG";
+  //disp_text(text1);
 
   // loop forever
   while (1) {

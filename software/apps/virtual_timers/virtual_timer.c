@@ -17,14 +17,15 @@ void TIMER4_IRQHandler(void) {
   NRF_TIMER4->EVENTS_COMPARE[0] = 0;
 
   // Place your interrupt handler code here
-
+  printf("Timer Fired!\n");
 }
 
 // Read the current value of the timer counter
 uint32_t read_timer(void) {
-
+  NRF_TIMER4->TASKS_CAPTURE[1] = 1;
+  volatile uint32_t time = NRF_TIMER4->CC[1];
   // Should return the value of the internal counter for TIMER4
-  return 0;
+  return time;
 }
 
 // Initialize TIMER4 as a free running timer
@@ -35,7 +36,13 @@ uint32_t read_timer(void) {
 // 4) Clear the timer
 // 5) Start the timer
 void virtual_timer_init(void) {
-  // Place your timer initialization code here
+  NRF_TIMER4->BITMODE = 3;      // 32 bit timer
+  NRF_TIMER4->PRESCALER = 4;    // 16/ 2^4 = 1
+  NRF_TIMER4->TASKS_START = 1;  // starts timer
+  NRF_TIMER4->MODE = 0;         // timer mode
+  
+  NRF_TIMER4->INTENSET = 1 << 16; // enables interrupts on CC[2]
+  NVIC_EnableIRQ(TIMER4_IRQn);
 }
 
 // Start a timer. This function is called for both one-shot and repeated timers
@@ -54,7 +61,9 @@ void virtual_timer_init(void) {
 // Follow the lab manual and start with simple cases first, building complexity and
 // testing it over time.
 static uint32_t timer_start(uint32_t microseconds, virtual_timer_callback_t cb, bool repeated) {
-
+  volatile uint32_t curr_time = read_timer();
+  int set_time = curr_time + microseconds; 
+  NRF_TIMER4->CC[0] = set_time;
   // Return a unique timer ID. (hint: What is guaranteed unique about the timer you have created?)
   return 0;
 }

@@ -7,8 +7,10 @@
 #include <stdint.h>
 #include <math.h>
 
-#include "lsm303agr.h"
+#include "pedometer.h"
 #include "nrf_delay.h"
+
+int steps; // number of steps
 
 // Pointer to an initialized I2C instance to use for transactions
 static const nrf_twi_mngr_t* i2c_manager = NULL;
@@ -70,24 +72,6 @@ void lsm303agr_init(const nrf_twi_mngr_t* i2c) {
   printf("%i\n", result);
   // ---Initialize Magnetometer---
 
-  // Reboot magnetometer
-  i2c_reg_write(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_CFG_REG_A, 0x40);
-  nrf_delay_ms(100); // needs delay to wait for reboot
-
-  // Enable Block Data Update
-  // Only updates sensor data when both halves of the data has been read
-  i2c_reg_write(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_CFG_REG_C, 0x10);
-
-  // Configure magnetometer at 100Hz, continuous mode
-  i2c_reg_write(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_CFG_REG_A, 0x0C);
-
-  // Read WHO AM I register
-  result = i2c_reg_read(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_WHO_AM_I_REG);
-  // check the result of the Magnetometer WHO AM I register
-  printf("%i\n", result);
-
-  // ---Initialize Temperature---
-
   // Enable temperature sensor
   i2c_reg_write(LSM303AGR_ACC_ADDRESS, LSM303AGR_ACC_TEMP_CFG_REG, 0xC0);
 }
@@ -136,39 +120,11 @@ lsm303agr_measurement_t lsm303agr_read_accelerometer(void) {
   return measurement;
 }
 
-lsm303agr_measurement_t lsm303agr_read_magnetometer(void) {
-  volatile uint8_t X_L = i2c_reg_read(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_OUT_X_L_REG);
-  volatile uint8_t X_U = i2c_reg_read(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_OUT_X_H_REG);
-  volatile uint8_t Y_L = i2c_reg_read(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_OUT_Y_L_REG);
-  volatile uint8_t Y_U = i2c_reg_read(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_OUT_Y_H_REG);
-  volatile uint8_t Z_L = i2c_reg_read(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_OUT_Z_L_REG);
-  volatile uint8_t Z_U = i2c_reg_read(LSM303AGR_MAG_ADDRESS, LSM303AGR_MAG_OUT_Z_H_REG);
-  
-  // combining lower and upper half of 10 bit value
-  int16_t X = ((uint16_t)X_U << 8) + X_L;
-  int16_t Y = ((uint16_t)Y_U << 8) + Y_L;
-  int16_t Z = ((uint16_t)Z_U << 8) + Z_L;
-  
-  // multiplying by scaling factor
-  float Xf = (float)X * 1.5;
-  float Yf = (float)Y * 1.5;
-  float Zf = (float)Z * 1.5;
-  
-  // converting from mgauss (milli-gauss) to uT (micro-Tesla)
-  Xf = Xf / 10;
-  Yf = Yf / 10;
-  Zf = Zf / 10;
-
-  lsm303agr_measurement_t measurement = {Xf,Yf,Zf};
-  return measurement;
+void clear_steps(void) {
+  steps = 0;
 }
 
-float get_tilt_angle(void) {
-  lsm303agr_measurement_t a = lsm303agr_read_accelerometer();
-  float angle;
-  float pi = atan(1)*4;
-  angle = sqrt((a.x_axis * a.x_axis) + (a.y_axis * a.y_axis)) / a.z_axis;
-  angle = atan(angle);
-  angle = angle * 180 / pi;
-  return angle;
+int get_steps(void) {
+  // something lol
+  return 0;
 }

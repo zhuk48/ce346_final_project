@@ -149,21 +149,42 @@ static void pwm_init(void) {
   // SPEAKER_OUT is the output pin, mark the others as NRFX_PWM_PIN_NOT_USED
   // Set the clock to 16 MHz
   // Set a countertop value based on sampling frequency and repetitions
-  // TODO
+  nrfx_pwm_config_t PWM_CONFIG;
+  PWM_CONFIG.output_pins[0] = SPEAKER_OUT;
+  PWM_CONFIG.output_pins[1] = NRFX_PWM_PIN_NOT_USED;
+  PWM_CONFIG.output_pins[2] = NRFX_PWM_PIN_NOT_USED;
+  PWM_CONFIG.output_pins[3] = NRFX_PWM_PIN_NOT_USED;
+  PWM_CONFIG.base_clock = NRF_PWM_CLK_16MHz;
+  PWM_CONFIG.count_mode = NRF_PWM_MODE_UP;
+  PWM_CONFIG.load_mode = NRF_PWM_LOAD_COMMON;
+  PWM_CONFIG.step_mode = NRF_PWM_STEP_AUTO;
+  // 10 repetitions
+  // counter top = peripheral clock / (sampling freq) / repeats = 16MHz / 16KHz / 10 
+  PWM_CONFIG.top_value = 100;
+  
+  nrfx_pwm_init(&PWM_INST, &PWM_CONFIG, NULL);
 }
 
 static void play_audio_samples_looped(void) {
   // Recalculate each sample as a duty cycle based on countertop
   // Each sample should be modified in place
-  // TODO
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    // sample / max_sample_value * counter_top
+    samples[i] = samples[i] * 100 / ADC_MAX_COUNTS;
+  }
 
   // Create the pwm sequence (nrf_pwm_sequence_t) using the samples
   // Do not make another buffer for this. You can reuse the sample buffer
   // You should set a non-zero repeat value (note that will affect frequency)
-  // TODO
+  nrf_pwm_sequence_t pwm_sequence = {
+    .values.p_common = samples,
+    .length = BUFFER_SIZE,
+    .repeats = 9,  // 9 repeats = 10 repititions 
+    .end_delay = 0,
+  };
 
   // Start playback of the samples and loop indefinitely
-  // TODO
+  nrfx_pwm_simple_playback(&PWM_INST, &pwm_sequence, 1, NRFX_PWM_FLAG_LOOP);
 }
 
 

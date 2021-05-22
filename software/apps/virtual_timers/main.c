@@ -55,7 +55,10 @@ int main(void) {
   //virtual_timer_start_repeated(2000000, led2_toggle);
 
   // loop forever
+  virtual_timer_start(2000000, 1);
   while (1) {
+    volatile curr_time = read_timer();
+    printf("%d\n", curr_time);
     nrf_delay_ms(1000);
   }
 }

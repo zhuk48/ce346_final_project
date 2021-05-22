@@ -97,13 +97,9 @@ float lsm303agr_read_temperature(void);
 // Return measurements as floating point values in g's
 lsm303agr_measurement_t lsm303agr_read_accelerometer(void);
 
-// Read all three axes on the magnetometer
-//
-// Return measurements as floating point values in uT
-lsm303agr_measurement_t lsm303agr_read_magnetometer(void);
 
-// Uses accelerometer readings to get tilt angle on all 3 axes
-//
-// Return measurements as floating point values in deg
-float get_tilt_angle(void);
+// returns number of steps and clears number of steps
+int get_steps(void);
+void clear_steps(void);
+
 

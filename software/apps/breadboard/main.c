@@ -1,4 +1,4 @@
-// Breadboard example app
+	// Breadboard example app
 //
 // Read from multiple analog sensors and control an RGB LED
 
@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
+// I hate dealing with strings in C
+#include <stdlib.h>
+#include <string.h>
 
 #include "app_timer.h"
 #include "nrf_delay.h"
@@ -16,9 +19,9 @@
 // Digital outputs
 // Breakout pins 13, 14, and 15
 // These are GPIO pin numbers that can be used in nrf_gpio_* calls
-#define LED_RED   EDGE_P13
+#define LED_RED   EDGE_P15
 #define LED_GREEN EDGE_P14
-#define LED_BLUE  EDGE_P15
+#define LED_BLUE  EDGE_P13
 
 // Digital inputs
 // Breakout pin 16
@@ -28,7 +31,6 @@
 // Analog inputs
 // Breakout pins 1 and 2
 // These are GPIO pin numbers that can be used in ADC configurations
-// AIN1 is breakout pin 1. AIN2 is breakout pin 2.
 #define ANALOG_TEMP_IN  NRF_SAADC_INPUT_AIN1
 #define ANALOG_LIGHT_IN NRF_SAADC_INPUT_AIN2
 
@@ -40,6 +42,7 @@
 // Global variables
 APP_TIMER_DEF(sample_timer);
 
+
 // Function prototypes
 static void gpio_init(void);
 static void adc_init(void);
@@ -47,7 +50,49 @@ static float adc_sample_blocking(uint8_t channel);
 
 static void sample_timer_callback(void* _unused) {
   // Do things periodically here
-  // TODO
+  
+  // Reading digital input
+  volatile bool switchin = nrf_gpio_pin_read(SWITCH_IN);
+  //printf("%d\n", switchin);
+  
+  // Testing functionality of ADC
+  //volatile float volts_in = adc_sample_blocking(ADC_LIGHT_CHANNEL);
+  //printf("%f\n", volts_in);
+  
+  // Printing output of light sensor
+  int volts_to_lux(char*, size_t);
+  char* b = (char*) malloc(12);
+  int brightness = volts_to_lux(b, 12);
+  printf("%s\n", b);
+  free(b);
+  
+  // Printing output of temp sensor (if I had one)
+  float volts_to_temp(void);
+  float temp = volts_to_temp();
+  printf("%f\n", temp);
+  
+  // Controlling LED with sensors
+  // RED led = light sensor
+  if (brightness < 1) {
+    nrf_gpio_pin_clear(LED_RED);
+  } else {
+    nrf_gpio_pin_set(LED_RED);
+  }
+  
+  // GREEN led = temp sensor
+  //if (temp > 25) {
+  //  nrf_gpio_pin_clear(LED_GREEN);
+  //} else {
+  //  nrf_gpio_pin_set(LED_GREEN);
+  //}
+  
+  // BLUE led = switch
+  if (switchin == 1) {
+    nrf_gpio_pin_clear(LED_BLUE);
+  } else {
+    nrf_gpio_pin_set(LED_BLUE);
+  }
+  
 }
 
 static void saadc_event_callback(nrfx_saadc_evt_t const* _unused) {
@@ -57,13 +102,17 @@ static void saadc_event_callback(nrfx_saadc_evt_t const* _unused) {
 
 static void gpio_init(void) {
   // Initialize output pins
-  // TODO
+  nrf_gpio_cfg_output(LED_RED);
+  nrf_gpio_cfg_output(LED_BLUE);
+  nrf_gpio_cfg_output(LED_GREEN);
 
   // Set LEDs off initially
-  // TODO
+  nrf_gpio_pin_set(LED_BLUE);
+  nrf_gpio_pin_set(LED_RED);
+  nrf_gpio_pin_set(LED_GREEN);
 
   // Initialize input pin
-  // TODO
+  nrf_gpio_cfg_input(SWITCH_IN, NRF_GPIO_PIN_NOPULL);
 }
 
 static void adc_init(void) {
@@ -97,12 +146,52 @@ static float adc_sample_blocking(uint8_t channel) {
 
   // convert ADC counts to volts
   // 12-bit ADC with range from 0 to 3.6 Volts
-  // TODO
+  float volts;
+  float interval = 3.6 / 4095; // (2^resoltuion - 1)/ v_ref
+  volts = interval * adc_counts;
+  
+  // this is to account for funky negative numbers?
+  //if (volts < 0) {
+  //	volts = 0;
+  //}
 
   // return voltage measurement
-  return 0.0;
+  return volts;
+}  
+
+// Helper functions
+int volts_to_lux(char *b, size_t lof) {
+  // very dark is the value I read when I place my hand over the light sensor
+  // dark is the value that is read when the sensor is placed away from direct light
+  // bright is the value I read when the sensor is placed under my LED desk lamp
+  // very bright is hte value I read when I shine my phone flashlight directly at the sensor
+
+  float volts = adc_sample_blocking(ADC_LIGHT_CHANNEL);
+  int brightness;
+  if (volts < 0.29) {
+    strcpy(b, "very dark");
+    brightness = 0;
+  } else if (volts < 1.0) {
+    strcpy(b, "dark");
+    brightness = 1;
+  } else if (volts < 3.0) {
+    strcpy(b, "bright");
+    brightness = 2;
+  } else {
+    strcpy(b, "very dark");
+    brightness = 3;
+  }
+  return brightness;
 }
 
+float volts_to_temp(void) {
+  float volts = adc_sample_blocking(ADC_TEMP_CHANNEL);
+  float temp;
+  float r = 10000.0 * (3.3 / volts - 1.0);
+  float r_inf = 10000.0 * exp(-3950.0/298.15);
+  temp = 3950.0 / (log(r/r_inf)/log(exp(1)));
+  return temp;
+}
 
 int main(void) {
   printf("Board started!\n");
@@ -124,7 +213,7 @@ int main(void) {
   // loop forever
   while (1) {
     // Don't put any code in here. Instead put periodic code in `sample_timer_callback()`
-    nrf_delay_ms(1000);
+    nrf_delay_ms(100);
   }
 }
 

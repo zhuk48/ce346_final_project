@@ -12,6 +12,7 @@
 
 #include "microbit_v2.h"
 #include "lsm303agr.h"
+#include "clock.h"
 
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
@@ -29,26 +30,13 @@ int main(void) {
   // Initialize the LSM303AGR accelerometer/magnetometer sensor
   lsm303agr_init(&twi_mngr_instance);
 
+
+  clock_init(11, 30, 59);
   // Loop forever
   while (1) {
-    // Print temperature:
-    volatile float t = lsm303agr_read_temperature();
-    printf("Temperature: %f\n", t);
-    
-    // Print accelrometer reading
-    lsm303agr_measurement_t acc = lsm303agr_read_accelerometer();
-    printf("Accelerometer reading: (%f, %f, %f)\n", acc.x_axis, acc.y_axis, acc.z_axis);
-    
-    // Print magnetometer reading
-    lsm303agr_measurement_t mag = lsm303agr_read_magnetometer();
-    printf("Magnetometer reading: (%f, %f, %f)\n", mag.x_axis, mag.y_axis, mag.z_axis);
-    
-    // Print tilt angle
-    float angle = get_tilt_angle();
-    printf("Tilt angle: %f\n", angle);
-    
-    printf("\n");
-
+    clock_inc();
+    time_struct curr_time = get_time();
+    printf("%i:%i:%i", curr_time.h, curr_time.m, curr_time.s);
     nrf_delay_ms(1000);
   }
 }
