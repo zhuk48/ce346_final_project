@@ -17,6 +17,10 @@
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
 
+#define BUFFER_SIZE 100
+
+lsm303agr_measurement_t samples[BUFFER_SIZE] = {0};
+
 int main(void) {
   printf("Board started!\n");
 
@@ -29,6 +33,17 @@ int main(void) {
 
   // Initialize the LSM303AGR accelerometer/magnetometer sensor
   lsm303agr_init(&twi_mngr_instance);
+
+  printf("Starting... \n");
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    samples[i] = lsm303agr_read_accelerometer();
+    nrf_delay_ms(100);  
+  }
+  printf("finished!\n");
+  
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    printf("%f %f %f \n", samples[i].x_axis, samples[i].y_axis, samples[i].z_axis);
+  }
 
 
   clock_init(11, 30, 59);
