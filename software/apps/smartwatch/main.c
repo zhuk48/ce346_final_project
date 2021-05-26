@@ -11,7 +11,7 @@
 #include "nrf_twi_mngr.h"
 
 #include "microbit_v2.h"
-#include "lsm303agr.h"
+#include "pedometer.h"
 #include "clock.h"
 
 // Global variables
@@ -19,7 +19,7 @@ NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
 
 #define BUFFER_SIZE 100
 
-lsm303agr_measurement_t samples[BUFFER_SIZE] = {0};
+//lsm303agr_measurement_t samples[BUFFER_SIZE] = {0};
 
 int main(void) {
   printf("Board started!\n");
@@ -36,13 +36,15 @@ int main(void) {
 
   printf("Starting... \n");
   for (int i = 0; i < BUFFER_SIZE; i++) {
-    samples[i] = lsm303agr_read_accelerometer();
+    schedule();
     nrf_delay_ms(100);  
   }
   printf("finished!\n");
   
+  lsm303agr_measurement_t* sample = return_buf();
+  
   for (int i = 0; i < BUFFER_SIZE; i++) {
-    printf("%f %f %f \n", samples[i].x_axis, samples[i].y_axis, samples[i].z_axis);
+    printf("%f %f %f \n", sample[i].x_axis, sample[i].y_axis, sample[i].z_axis);
   }
 
 

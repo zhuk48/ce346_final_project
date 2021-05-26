@@ -101,5 +101,6 @@ lsm303agr_measurement_t lsm303agr_read_accelerometer(void);
 // returns number of steps and clears number of steps
 int get_steps(void);
 void clear_steps(void);
-
+void schedule(void);
+lsm303agr_measurement_t * return_buf(void);
 
