@@ -30,7 +30,7 @@ static void clock_inc(void* _unused) {
       t.m = 0;
       t.h++;
       if (t.h > 11) {
-        t.h = 0;
+        t.h = 1;
       }
     }
   }
