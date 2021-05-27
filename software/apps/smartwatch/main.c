@@ -13,6 +13,7 @@
 #include "microbit_v2.h"
 #include "pedometer.h"
 #include "clock.h"
+#include "disp.h"
 
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
@@ -34,26 +35,25 @@ int main(void) {
   // Initialize the LSM303AGR accelerometer/magnetometer sensor
   lsm303agr_init(&twi_mngr_instance);
 
-  printf("Starting... \n");
-  for (int i = 0; i < BUFFER_SIZE; i++) {
-    schedule();
-    nrf_delay_ms(100);  
-  }
-  printf("finished!\n");
+  //printf("Starting... \n");
+  //for (int i = 0; i < BUFFER_SIZE; i++) {
+  //  schedule();
+  //  nrf_delay_ms(100);  
+  //}
+  //printf("finished!\n");
   
-  lsm303agr_measurement_t* sample = return_buf();
+  //lsm303agr_measurement_t* sample = return_buf();
   
-  for (int i = 0; i < BUFFER_SIZE; i++) {
-    printf("%f %f %f \n", sample[i].x_axis, sample[i].y_axis, sample[i].z_axis);
-  }
+  //for (int i = 0; i < BUFFER_SIZE; i++) {
+  //  printf("%f %f %f \n", sample[i].x_axis, sample[i].y_axis, sample[i].z_axis);
+  //}
 
+  app_timer_init();
 
-  clock_init(11, 30, 59);
+  disp_init();
+  clock_init(12, 59, 50);
   // Loop forever
   while (1) {
-    clock_inc();
-    time_struct curr_time = get_time();
-    printf("%i:%i:%i", curr_time.h, curr_time.m, curr_time.s);
     nrf_delay_ms(1000);
   }
 }

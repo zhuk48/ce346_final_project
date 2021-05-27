@@ -1,4 +1,5 @@
 #pragma once
+#include "app_timer.h"
 
 // structure to keep track of time
 typedef struct time_struct {
@@ -8,5 +9,5 @@ typedef struct time_struct {
 } time_struct;
 
 void clock_init(uint8_t hour, uint8_t min, uint8_t sec);
-void clock_inc(void);
+static void clock_inc(void* _unused);
 time_struct get_time();

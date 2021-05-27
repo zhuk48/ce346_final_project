@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <time.h>
 
 #include "clock.h"
@@ -8,15 +9,20 @@ time_struct t = {0,0,0};
 
 // initializes the clock
 void clock_init(uint8_t hour, uint8_t min, uint8_t sec) {
+  
   t.h = hour;
   t.m = min;
   t.s = sec;
+  
+  APP_TIMER_DEF(one_sec);
+  app_timer_create(&one_sec, APP_TIMER_MODE_REPEATED, clock_inc);
+  app_timer_start(one_sec, 32768, NULL);
 }
 
 // function to be called every second to "increment" clock
 // this should be called once every second from main
-void clock_inc(void) {
-  t.s = t.s++;
+static void clock_inc(void* _unused) {
+  t.s++;
   if (t.s > 59) {
     t.s = 0;
     t.m++;
@@ -24,7 +30,7 @@ void clock_inc(void) {
       t.m = 0;
       t.h++;
       if (t.h > 11) {
-        t.h = 0;
+        t.h = 1;
       }
     }
   }
