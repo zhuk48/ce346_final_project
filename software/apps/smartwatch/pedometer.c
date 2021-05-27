@@ -13,7 +13,7 @@
 
 #define BUFFER_SIZE 100
 
-accel_raw buffer1[BUFFER_SIZE] = {0};
+/*accel_raw buffer1[BUFFER_SIZE] = {0};
 lsm303agr_measurement_t samples[BUFFER_SIZE] = {0};
 uint8_t i = 0;
 
@@ -114,4 +114,4 @@ int get_steps(void) {
 void pedometer_init(const nrf_twi_mngr_t* i2c) {
   i2c_manager = i2c;
   lsm303agr_init(i2c);
-}
+}*/
