@@ -34,19 +34,20 @@ int main(void) {
 
   // Initialize the LSM303AGR accelerometer/magnetometer sensor
   lsm303agr_init(&twi_mngr_instance);
-
-  //printf("Starting... \n");
-  //for (int i = 0; i < BUFFER_SIZE; i++) {
-  //  schedule();
-  //  nrf_delay_ms(100);  
-  //}
-  //printf("finished!\n");
+  pedometer_init(&twi_mngr_instance, &i2c_config);
+  printf("Starting... \n");
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    schedule();
+    nrf_delay_ms(100);  
+  }
+  printf("finished!\n");
   
-  //lsm303agr_measurement_t* sample = return_buf();
+  raw_2_measurement();
+  lsm303agr_measurement_t* sample = return_buf();
   
-  //for (int i = 0; i < BUFFER_SIZE; i++) {
-  //  printf("%f %f %f \n", sample[i].x_axis, sample[i].y_axis, sample[i].z_axis);
-  //}
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    printf("%f %f %f \n", sample[i].x_axis, sample[i].y_axis, sample[i].z_axis);
+  }
 
   app_timer_init();
 
