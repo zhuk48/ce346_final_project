@@ -107,3 +107,8 @@ lsm303agr_measurement_t lsm303agr_read_magnetometer(void);
 // Return measurements as floating point values in deg
 float get_tilt_angle(void);
 
+//schedule a measurement from the accelerometer
+void lsm303agr_accel_schedule(void);
+
+//return the sample buffer
+lsm303agr_measurement_t* lsm303agr_return_buf(void);

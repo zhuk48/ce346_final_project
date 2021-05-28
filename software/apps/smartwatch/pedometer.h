@@ -18,6 +18,15 @@ typedef struct {
 
 // Function prototypes
 
+// Resets steps
+void clear_steps(void);
+
+// Returns number of steps
+int get_steps(void);
+
+// Collects data and prints it out
+void collect_data(void);
+
 // Initialize and configure the LSM303AGR accelerometer/magnetometer
 //
 // i2c - pointer to already initialized and enabled twim instance
@@ -25,18 +34,11 @@ typedef struct {
 void pedometer_init(const nrf_twi_mngr_t* i2c, const nrf_drv_twi_config_t* config);
 
 
-// returns number of steps and clears number of steps
-int get_steps(void);
 
-void clear_steps(void);
 
-// schedules a read of the accelerometer
-void schedule(void);
 
-//get the buffer
-lsm303agr_measurement_t * return_buf(void);
 
-void raw_2_measurement(void);
+
 
 
 
