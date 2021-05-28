@@ -10,84 +10,77 @@
 #include "pedometer.h"
 #include "nrf_delay.h"
 #include "app_timer.h"
+#include "lsm303agr.h"
 
 #define BUFFER_SIZE 100
 
-/*accel_raw buffer1[BUFFER_SIZE] = {0};
+float force[BUFFER_SIZE] = {0};
 lsm303agr_measurement_t samples[BUFFER_SIZE] = {0};
-uint8_t i = 0;
+float run_avg = 0;
+float n = 0;
+//nrf_twi_mngr_transfer_t const transfer[] = {0};
+
+int i = 0;
+int start_calc = 0;
 
 int steps; // number of steps
 
-//APP_TIMER_DEF(my_timer_1);
-//APP_TIMER_DEF(my_timer_2);
+APP_TIMER_DEF(read_accel);
+APP_TIMER_DEF(count_steps);
 
 // Pointer to an initialized I2C instance to use for transactions
 static const nrf_twi_mngr_t* i2c_manager = NULL;
+static const nrf_drv_twi_config_t* i2c_config = NULL;
 
-
-
-
-
-//Helper function to schedule a read from the accelerometer into buffer
-void schedule(void) {//uint8_t i2c_addr) {
-  uint8_t i2c_addr = LSM303AGR_ACC_ADDRESS;
-  volatile uint8_t X_U = 0;
-  volatile uint8_t X_L = 0;
-  volatile uint8_t Y_U = 0;
-  volatile uint8_t Y_L = 0;
-  volatile uint8_t Z_U = 0;
-  volatile uint8_t Z_L = 0;
-
-  uint8_t X_L_reg = LSM303AGR_ACC_OUT_X_L;
-  uint8_t X_U_reg = LSM303AGR_ACC_OUT_X_H;
-  uint8_t Y_L_reg = LSM303AGR_ACC_OUT_Y_L;
-  uint8_t Y_U_reg = LSM303AGR_ACC_OUT_Y_H;
-  uint8_t Z_L_reg = LSM303AGR_ACC_OUT_Z_L;
-  uint8_t Z_U_reg = LSM303AGR_ACC_OUT_Z_H;
+float last_5(int start) {
+  float result = force[start];
+  int j = start - 1;
+  int end = 0;
+  if (start < 5) {
+    end = BUFFER_SIZE + (start - 5);
+  }
+  else {
+    end = start - 5;
+  }
   
-  nrf_twi_mngr_transfer_t const read_transfer[] = { //read accelerometer as 1 transaction
-    NRF_TWI_MNGR_WRITE(i2c_addr, &X_L_reg, 1, NRF_TWI_MNGR_NO_STOP),
-    NRF_TWI_MNGR_READ(i2c_addr, &X_L, 1, 0), 
-    NRF_TWI_MNGR_WRITE(i2c_addr, &X_U_reg, 1, NRF_TWI_MNGR_NO_STOP),
-    NRF_TWI_MNGR_READ(i2c_addr, &X_U, 1, 0),
-    NRF_TWI_MNGR_WRITE(i2c_addr, &Y_L_reg, 1, NRF_TWI_MNGR_NO_STOP),
-    NRF_TWI_MNGR_READ(i2c_addr, &Y_L, 1, 0),
-    NRF_TWI_MNGR_WRITE(i2c_addr, &Y_U_reg, 1, NRF_TWI_MNGR_NO_STOP),
-    NRF_TWI_MNGR_READ(i2c_addr, &Y_U, 1, 0),
-    NRF_TWI_MNGR_WRITE(i2c_addr, &Z_L_reg, 1, NRF_TWI_MNGR_NO_STOP),
-    NRF_TWI_MNGR_READ(i2c_addr, &Z_L, 1, 0),
-    NRF_TWI_MNGR_WRITE(i2c_addr, &Z_U_reg, 1, NRF_TWI_MNGR_NO_STOP),
-    NRF_TWI_MNGR_READ(i2c_addr, &Z_U, 1, 0),
-  };
-  nrf_twi_mngr_transaction_t trans;
-  trans.callback = 
-  nrf_twi_mngr_schedule(i2c_manager, read_transfer);
-  
+  while (j > end) {
+    result = (result + force[j]);
+    if (j == 0) {
+      j = BUFFER_SIZE;
+    }
+    j--;
+  }
+  return result/5.0;
+}
 
-  int16_t X = ((uint16_t)X_U << 8) + X_L;
-  int16_t Y = ((uint16_t)Y_U << 8) + Y_L;
-  int16_t Z = ((uint16_t)Z_U << 8) + Z_L;
-  
-  // shift right to account for left aligned
-  X = X >> 6;
-  Y = Y >> 6;
-  Z = Z >> 6;
-  
-  // multiplying by scaling factor 
-  float Xf = (float)X * 3.9;
-  float Yf = (float)Y * 3.9;
-  float Zf = (float)Z * 3.9;
+//calculate steps taken
+void calc_steps(void) {
+  for(int j = start_calc; j < i; j++) {
+    if ((last_5(j) > 1.75) && (last_5(j-1) <= 1.75)) {
+      steps++;
+    }
+  } 
+}
 
-  // convert mg (milli-g) to g
-  Xf = Xf / 1000.0;
-  Yf = Yf / 1000.0;
-  Zf = Zf / 1000.0;
+//calculate force from measurements and counts steps
+void measurement_2_force(void* _unused) {
+  for(int j = start_calc; j < i; j++) {
+    float Xf = samples[j].x_axis;
+    float Yf = samples[j].y_axis;
+    float Zf = samples[j].z_axis;
+    
+    force[j] = sqrt((Xf*Xf) + (Yf*Yf) + (Zf*Zf));
+  }
 
-  // save result to buffer
-  lsm303agr_measurement_t measurement = {Xf, Yf, Zf};
-  samples[i] = measurement;
-  if (i < BUFFER_SIZE) {
+  calc_steps();
+  start_calc = i;
+}
+
+//read in from accelerometer
+void read_in(void* _unused) {
+  samples[i] = lsm303agr_read_accelerometer();
+
+  if (i < BUFFER_SIZE-1) {
     i++;
   }
   else {
@@ -95,12 +88,6 @@ void schedule(void) {//uint8_t i2c_addr) {
   }
 }
 
-void count_steps(void) {
-}
-
-lsm303agr_measurement_t * return_buf(void) {
-  return samples;
-}
 
 void clear_steps(void) {
   steps = 0;
@@ -108,10 +95,53 @@ void clear_steps(void) {
 
 int get_steps(void) {
   // something lol
-  return 0;
+  return steps;
 }
 
-void pedometer_init(const nrf_twi_mngr_t* i2c) {
+void collect_data(void) {
+  //Pause timers
+  app_timer_stop(read_accel);
+  app_timer_stop(count_steps);
+  
+  printf("starting... \n");
+
+  //collect a full buffer of data
+  for (int j = 0; j < BUFFER_SIZE; j++) {
+    samples[j] = lsm303agr_read_accelerometer();
+    nrf_delay_ms(25);  
+  }
+  
+  printf("finished collecting data.\n");
+
+  //convert to force and count steps
+  i = BUFFER_SIZE;
+  start_calc = 1;
+
+  measurement_2_force(NULL);
+  //calc_steps();
+
+  i = 0;
+  start_calc = 0;
+  
+  //print buffer
+  for (int j = 0; j < BUFFER_SIZE; j++) {
+    printf("%f %f %f\n", samples[j].x_axis, samples[j].y_axis, samples[j].z_axis);
+  }
+  printf("%d steps\n", steps);
+  
+  //restart timers
+  app_timer_start(read_accel, 32768/40, NULL);
+  app_timer_start(count_steps, 32768/4, NULL); 
+}
+
+
+void pedometer_init(const nrf_twi_mngr_t* i2c, const nrf_drv_twi_config_t* config) {
   i2c_manager = i2c;
+  i2c_config = config;
   lsm303agr_init(i2c);
-}*/
+
+  app_timer_create(&read_accel, APP_TIMER_MODE_REPEATED, read_in);
+  app_timer_create(&count_steps, APP_TIMER_MODE_REPEATED, measurement_2_force);
+  app_timer_start(read_accel, 32768/40, NULL);
+  app_timer_start(count_steps, 32768/4, NULL);  
+}

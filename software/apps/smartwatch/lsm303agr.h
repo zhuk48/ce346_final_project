@@ -15,15 +15,6 @@ typedef struct {
   float z_axis;
 } lsm303agr_measurement_t;
 
-typedef struct {
-  volatile uint8_t X_U;
-  volatile uint8_t X_L;
-  volatile uint8_t Y_U;
-  volatile uint8_t Y_L;
-  volatile uint8_t Z_U;
-  volatile uint8_t Z_L;
-} accel_raw;
-
 // Register definitions for accelerometer
 typedef enum {
   LSM303AGR_ACC_STATUS_REG_AUX = 0X07,
@@ -106,10 +97,18 @@ float lsm303agr_read_temperature(void);
 // Return measurements as floating point values in g's
 lsm303agr_measurement_t lsm303agr_read_accelerometer(void);
 
+// Read all three axes on the magnetometer
+//
+// Return measurements as floating point values in uT
+lsm303agr_measurement_t lsm303agr_read_magnetometer(void);
 
-// returns number of steps and clears number of steps
-int get_steps(void);
-void clear_steps(void);
-void schedule(void);
-lsm303agr_measurement_t * return_buf(void);
+// Uses accelerometer readings to get tilt angle on all 3 axes
+//
+// Return measurements as floating point values in deg
+float get_tilt_angle(void);
 
+//schedule a measurement from the accelerometer
+void lsm303agr_accel_schedule(void);
+
+//return the sample buffer
+lsm303agr_measurement_t* lsm303agr_return_buf(void);
