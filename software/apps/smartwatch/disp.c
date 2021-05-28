@@ -2,9 +2,9 @@
 #include "disp.h"
 #include "microbit_v2.h"
 #include "clock.h"
+#include "gpio.h"
 
-enum modes {CLOCK, STEP_COUNTER, STOPWATCH}; // defines modes of watch
-enum modes curr_state; // keeps track of current state
+uint8_t curr_state = 0; // keeps track of current state
 
 bool state[5][5] = {
     {0, 0, 0, 0, 0},
@@ -15,6 +15,11 @@ bool state[5][5] = {
   };
 uint8_t col = 0;
 // state[0][i] would be column 1 
+
+  APP_TIMER_DEF(LEDtimer);
+  APP_TIMER_DEF(clock_timer);
+  APP_TIMER_DEF(ped_timer);
+  APP_TIMER_DEF(state_machine_timer);
 
 void disp_init(void){
   // initialize row pins
@@ -43,14 +48,42 @@ void disp_init(void){
   nrf_gpio_pin_clear(LED_COL4);
   nrf_gpio_pin_clear(LED_COL5);
   
-  APP_TIMER_DEF(LEDtimer);
-  APP_TIMER_DEF(clock_timer);
+  // init buttons
+  gpio_config(14, GPIO_INPUT); // button A
+  gpio_config(23, GPIO_INPUT); // button B
+  
   app_timer_create(&LEDtimer, APP_TIMER_MODE_REPEATED, disp_show);
   app_timer_create(&clock_timer, APP_TIMER_MODE_REPEATED, disp_time);
+  app_timer_create(&state_machine_timer, APP_TIMER_MODE_REPEATED, check_state);
+  app_timer_create(&ped_timer, APP_TIMER_MODE_REPEATED, disp_steps);
   app_timer_start(LEDtimer, 100, NULL);
-  app_timer_start(clock_timer, 16384, NULL);
+  app_timer_start(state_machine_timer, 8198, NULL);
+}
+
+static void check_state(void* _unused) {
+  state[curr_state][0] = 1;
+  if (gpio_read(14) == false) {
+    state[curr_state][0] = 0;
+    curr_state = curr_state + 1;
+    if (curr_state == 3) curr_state = 0;
+  }
   
-  //curr_state = CLOCK;
+  switch(curr_state) {
+    case(0):
+      app_timer_start(clock_timer, 16384, NULL);
+      app_timer_stop(ped_timer);
+      break;
+      
+    case(1):
+      app_timer_stop(clock_timer);
+      app_timer_start(ped_timer, 32768, NULL);
+      break;
+      
+    case(2):
+      app_timer_stop(clock_timer);
+      break;
+  }
+    
 }
 
 static void disp_show(void* _unused) {
@@ -96,22 +129,41 @@ static void disp_show(void* _unused) {
   }
 }
 
-static void disp_time(void) {
+static void disp_time(void* _unused) {
+  //app_timer_stop(ped_timer);
   time_struct t = get_time();
-  
   uint8_t h_tens = t.h / 10;
   uint8_t h_ones = t.h % 10;
   uint8_t m_tens = t.m / 10;
   uint8_t m_ones = t.m % 10;
-  time_to_led(h_tens, 0);
-  time_to_led(h_ones, 1);
-  time_to_led(m_tens, 3);
-  time_to_led(m_ones, 4);
+  num_to_led(h_tens, 0);
+  num_to_led(h_ones, 1);
+  num_to_led(m_tens, 3);
+  num_to_led(m_ones, 4);
   state[2][2] = !(t.s % 2);
+  state[2][1] = 0;
   state[2][4] = !(t.s % 2);
+  state[2][3] = 0;
+}
+
+static void disp_steps(void* _unused){
+  // this line will be replaced with get steps
+  int steps = 9216;
+  uint8_t steps_tth = steps / 10000;
+  uint8_t steps_th = steps / 1000 % 10;
+  uint8_t steps_h = steps / 100 % 10;
+  uint8_t steps_t = steps / 10 % 10;
+  uint8_t steps_o = steps % 10;
+  num_to_led(steps_tth, 0);
+  num_to_led(steps_th, 1);
+  num_to_led(steps_h, 2);
+  num_to_led(steps_t, 3);
+  num_to_led(steps_o, 4);
+  printf("%i", steps_o);
+  
 }
  
-static void time_to_led(uint8_t num, uint8_t col_index) {
+static void num_to_led(uint8_t num, uint8_t col_index) {
   for (int j = 0; j < 5; j++) {
    state[col_index][4-j] = num % 2;
    num = num /2;
