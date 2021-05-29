@@ -80,6 +80,9 @@ static void check_state(void* _unused) {
     case(1):
       app_timer_stop(clock_timer);
       app_timer_start(ped_timer, 32768, NULL);
+      if (nrf_gpio_pin_read(BTN_A) == 0 || nrf_gpio_pin_read(BTN_B) == 0) {
+        clear_steps();
+      }
       break;
       
     case(2):
@@ -152,7 +155,7 @@ static void disp_time(void* _unused) {
 
 static void disp_steps(void* _unused){
   // this line will be replaced with get steps
-  int steps = 9216;
+  int steps = get_steps();
   uint8_t steps_tth = steps / 10000;
   uint8_t steps_th = steps / 1000 % 10;
   uint8_t steps_h = steps / 100 % 10;
