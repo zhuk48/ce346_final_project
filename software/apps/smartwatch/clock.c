@@ -19,6 +19,32 @@ void clock_init(uint8_t hour, uint8_t min, uint8_t sec) {
   app_timer_start(one_sec, 32768, NULL);
 }
 
+void clock_set(bool dir) {
+  if (dir == true) {
+    if (t.m == 59) {
+      t.m = 0;
+      if (t.h == 12) {
+        t.h = 1;
+      } else { 
+        t.h++;
+      }
+    } else {
+      t.m++;
+    }
+  } else if (dir == false) {
+    if (t.m == 0) {
+      t.m = 59;
+      if (t.h == 1) {
+        t.h = 12;
+      } else {
+        t.h--;
+      }
+    } else {
+      t.m--;
+    }
+  }
+}
+
 // function to be called every second to "increment" clock
 // this should be called once every second from main
 static void clock_inc(void* _unused) {

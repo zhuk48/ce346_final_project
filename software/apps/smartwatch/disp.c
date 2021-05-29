@@ -4,9 +4,11 @@
 #include "clock.h"
 #include "gpio.h"
 
+#include "touch_sensor.h"
+
 uint8_t curr_state = 0; // keeps track of current state
 
-bool state[5][5] = {
+bool led_state[5][5] = {
     {0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0},
@@ -56,22 +58,24 @@ void disp_init(void){
   app_timer_create(&clock_timer, APP_TIMER_MODE_REPEATED, disp_time);
   app_timer_create(&state_machine_timer, APP_TIMER_MODE_REPEATED, check_state);
   app_timer_create(&ped_timer, APP_TIMER_MODE_REPEATED, disp_steps);
-  app_timer_start(LEDtimer, 100, NULL);
+  app_timer_start(LEDtimer, 65, NULL);
   app_timer_start(state_machine_timer, 8198, NULL);
 }
 
 static void check_state(void* _unused) {
-  state[curr_state][0] = 1;
-  if (gpio_read(14) == false) {
-    state[curr_state][0] = 0;
-    curr_state = curr_state + 1;
-    if (curr_state == 3) curr_state = 0;
-  }
+  led_state[curr_state][0] = 1;
+  curr_state = get_state();
   
   switch(curr_state) {
     case(0):
       app_timer_start(clock_timer, 16384, NULL);
       app_timer_stop(ped_timer);
+      if (nrf_gpio_pin_read(BTN_A) == 0) {
+        clock_set(false);
+      }
+      if (nrf_gpio_pin_read(BTN_B) == 0) {
+        clock_set(true);
+      }
       break;
       
     case(1):
@@ -81,6 +85,7 @@ static void check_state(void* _unused) {
       
     case(2):
       app_timer_stop(clock_timer);
+      app_timer_stop(ped_timer);
       break;
   }
     
@@ -115,11 +120,11 @@ static void disp_show(void* _unused) {
       break;
   }
   
-  nrf_gpio_pin_write(LED_ROW1, state[col][0]);
-  nrf_gpio_pin_write(LED_ROW2, state[col][1]);
-  nrf_gpio_pin_write(LED_ROW3, state[col][2]);
-  nrf_gpio_pin_write(LED_ROW4, state[col][3]);
-  nrf_gpio_pin_write(LED_ROW5, state[col][4]);
+  nrf_gpio_pin_write(LED_ROW1, led_state[col][0]);
+  nrf_gpio_pin_write(LED_ROW2, led_state[col][1]);
+  nrf_gpio_pin_write(LED_ROW3, led_state[col][2]);
+  nrf_gpio_pin_write(LED_ROW4, led_state[col][3]);
+  nrf_gpio_pin_write(LED_ROW5, led_state[col][4]);
   
   // increments to next col
   if (col == 4) {
@@ -140,10 +145,10 @@ static void disp_time(void* _unused) {
   num_to_led(h_ones, 1);
   num_to_led(m_tens, 3);
   num_to_led(m_ones, 4);
-  state[2][2] = !(t.s % 2);
-  state[2][1] = 0;
-  state[2][4] = !(t.s % 2);
-  state[2][3] = 0;
+  led_state[2][2] = !(t.s % 2);
+  led_state[2][1] = 0;
+  led_state[2][4] = !(t.s % 2);
+  led_state[2][3] = 0;
 }
 
 static void disp_steps(void* _unused){
@@ -159,13 +164,12 @@ static void disp_steps(void* _unused){
   num_to_led(steps_h, 2);
   num_to_led(steps_t, 3);
   num_to_led(steps_o, 4);
-  printf("%i", steps_o);
   
 }
  
 static void num_to_led(uint8_t num, uint8_t col_index) {
   for (int j = 0; j < 5; j++) {
-   state[col_index][4-j] = num % 2;
+   led_state[col_index][4-j] = num % 2;
    num = num /2;
   }
 }

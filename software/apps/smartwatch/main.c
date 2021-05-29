@@ -14,6 +14,7 @@
 #include "pedometer.h"
 #include "clock.h"
 #include "disp.h"
+#include "touch_sensor.h"
 
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
@@ -35,10 +36,12 @@ int main(void) {
 
   // Initialize the LSM303AGR accelerometer/magnetometer sensor
   //lsm303agr_init(&twi_mngr_instance);
+  virtual_timer_init();
   app_timer_init();
 
   disp_init();
   clock_init(12, 59, 50);
+  touch_init();
   pedometer_init(&twi_mngr_instance, &i2c_config);
     
   //collect_data();
