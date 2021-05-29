@@ -23,24 +23,14 @@ void clock_set(bool dir) {
   if (dir == true) {
     if (t.m == 59) {
       t.m = 0;
-      if (t.h == 12) {
-        t.h = 1;
-      } else { 
-        t.h++;
-      }
     } else {
       t.m++;
     }
   } else if (dir == false) {
-    if (t.m == 0) {
-      t.m = 59;
-      if (t.h == 1) {
-        t.h = 12;
-      } else {
-        t.h--;
-      }
+    if (t.h == 12) {
+      t.h = 1;
     } else {
-      t.m--;
+      t.h++;
     }
   }
 }
