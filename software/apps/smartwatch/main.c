@@ -49,7 +49,7 @@ int main(void) {
   // Loop forever
   while (1) {
     nrf_delay_ms(1000);
-    printf("%d\n", get_steps());
+    //printf("%d\n", get_steps());
   }
 }
 

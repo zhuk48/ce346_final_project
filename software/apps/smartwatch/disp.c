@@ -3,6 +3,7 @@
 #include "microbit_v2.h"
 #include "clock.h"
 #include "gpio.h"
+#include "pedometer.h"
 
 uint8_t curr_state = 0; // keeps track of current state
 
@@ -148,7 +149,7 @@ static void disp_time(void* _unused) {
 
 static void disp_steps(void* _unused){
   // this line will be replaced with get steps
-  int steps = 9216;
+  int steps = get_steps();
   uint8_t steps_tth = steps / 10000;
   uint8_t steps_th = steps / 1000 % 10;
   uint8_t steps_h = steps / 100 % 10;
