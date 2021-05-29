@@ -2,7 +2,6 @@
 #include "disp.h"
 #include "microbit_v2.h"
 #include "clock.h"
-#include "gpio.h"
 
 #include "touch_sensor.h"
 
@@ -51,8 +50,8 @@ void disp_init(void){
   nrf_gpio_pin_clear(LED_COL5);
   
   // init buttons
-  gpio_config(14, GPIO_INPUT); // button A
-  gpio_config(23, GPIO_INPUT); // button B
+  nrf_gpio_pin_dir_set(BTN_A, NRF_GPIO_PIN_DIR_INPUT); // button A
+  nrf_gpio_pin_dir_set(BTN_B, NRF_GPIO_PIN_DIR_INPUT); // button B
   
   app_timer_create(&LEDtimer, APP_TIMER_MODE_REPEATED, disp_show);
   app_timer_create(&clock_timer, APP_TIMER_MODE_REPEATED, disp_time);
