@@ -1,9 +1,11 @@
 #include "nrf_gpio.h"
 #include "disp.h"
 #include "microbit_v2.h"
-#include "clock.h"
 
+#include "clock.h"
 #include "touch_sensor.h"
+#include "pedometer.h"
+#include "countdown.h"
 
 uint8_t curr_state = 0; // keeps track of current state
 
@@ -20,6 +22,7 @@ uint8_t col = 0;
   APP_TIMER_DEF(LEDtimer);
   APP_TIMER_DEF(clock_timer);
   APP_TIMER_DEF(ped_timer);
+  APP_TIMER_DEF(cd_timer);
   APP_TIMER_DEF(state_machine_timer);
 
 void disp_init(void){
@@ -57,6 +60,7 @@ void disp_init(void){
   app_timer_create(&clock_timer, APP_TIMER_MODE_REPEATED, disp_time);
   app_timer_create(&state_machine_timer, APP_TIMER_MODE_REPEATED, check_state);
   app_timer_create(&ped_timer, APP_TIMER_MODE_REPEATED, disp_steps);
+  app_timer_create(&cd_timer, APP_TIMER_MODE_REPEATED, disp_cd);
   app_timer_start(LEDtimer, 65, NULL);
   app_timer_start(state_machine_timer, 8198, NULL);
 }
@@ -67,8 +71,9 @@ static void check_state(void* _unused) {
   
   switch(curr_state) {
     case(0):
-      app_timer_start(clock_timer, 16384, NULL);
       app_timer_stop(ped_timer);
+      app_timer_stop(cd_timer);
+      app_timer_start(clock_timer, 16384, NULL);
       if (nrf_gpio_pin_read(BTN_A) == 0) {
         clock_set(false);
       }
@@ -79,7 +84,8 @@ static void check_state(void* _unused) {
       
     case(1):
       app_timer_stop(clock_timer);
-      app_timer_start(ped_timer, 32768, NULL);
+      app_timer_stop(cd_timer);
+      app_timer_start(ped_timer, 16384, NULL);
       if (nrf_gpio_pin_read(BTN_A) == 0 || nrf_gpio_pin_read(BTN_B) == 0) {
         clear_steps();
       }
@@ -88,6 +94,13 @@ static void check_state(void* _unused) {
     case(2):
       app_timer_stop(clock_timer);
       app_timer_stop(ped_timer);
+      app_timer_start(cd_timer, 16384, NULL);
+      if (nrf_gpio_pin_read(BTN_A) == 0) {
+        countdown_set();
+      }
+      if (nrf_gpio_pin_read(BTN_B) == 0) {
+        countdown_start_stop();
+      }
       break;
   }
     
@@ -137,7 +150,6 @@ static void disp_show(void* _unused) {
 }
 
 static void disp_time(void* _unused) {
-  //app_timer_stop(ped_timer);
   time_struct t = get_time();
   uint8_t h_tens = t.h / 10;
   uint8_t h_ones = t.h % 10;
@@ -154,7 +166,6 @@ static void disp_time(void* _unused) {
 }
 
 static void disp_steps(void* _unused){
-  // this line will be replaced with get steps
   int steps = get_steps();
   uint8_t steps_tth = steps / 10000;
   uint8_t steps_th = steps / 1000 % 10;
@@ -166,7 +177,20 @@ static void disp_steps(void* _unused){
   num_to_led(steps_h, 2);
   num_to_led(steps_t, 3);
   num_to_led(steps_o, 4);
-  
+}
+
+static void disp_cd(void* _unused) {
+  uint32_t rem = get_time_remain();
+  printf("%i\n", rem);
+  uint8_t rem_m_tens = (rem / 60) / 10;
+  uint8_t rem_m_ones = (rem / 60) % 10;
+  uint8_t rem_s_tens = (rem % 60) / 10;
+  uint8_t rem_s_ones = (rem % 60) % 10;
+  num_to_led(rem_m_tens, 0);
+  num_to_led(rem_m_ones, 1);
+  num_to_led(0, 2);
+  num_to_led(rem_s_tens, 3);
+  num_to_led(rem_s_ones, 4);
 }
  
 static void num_to_led(uint8_t num, uint8_t col_index) {

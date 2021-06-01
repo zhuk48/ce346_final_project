@@ -15,6 +15,7 @@
 #include "clock.h"
 #include "disp.h"
 #include "touch_sensor.h"
+#include "countdown.h"
 
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
@@ -40,8 +41,9 @@ int main(void) {
   app_timer_init();
 
   disp_init();
-  clock_init(12, 59, 50);
+  clock_init(12, 00, 00);
   touch_init();
+  countdown_init();
   pedometer_init(&twi_mngr_instance, &i2c_config);
     
   //collect_data();

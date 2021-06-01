@@ -1,8 +1,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "touch_sensor.h"
 
 #include "app_timer.h"
+#include "nrf.h"
 #include "nrf_delay.h"
 
 #include "microbit_v2.h"
@@ -11,7 +13,6 @@
 APP_TIMER_DEF(touch_timer);
 
 uint8_t sm_state;
-// sm_state:
 
 static void button_0(void) {
   nrf_gpio_pin_dir_set(TOUCH_RING0, NRF_GPIO_PIN_DIR_OUTPUT);
@@ -64,23 +65,6 @@ static void button_2(void) {
   }
 }
 
-static void button_logo(void) {
-  nrf_gpio_pin_dir_set(TOUCH_LOGO, NRF_GPIO_PIN_DIR_OUTPUT);
-  nrf_gpio_pin_write(TOUCH_LOGO, 0);
-  nrf_gpio_pin_dir_set(TOUCH_LOGO, NRF_GPIO_PIN_DIR_INPUT);
-  
-  uint32_t start = read_timer();
-  bool input = nrf_gpio_pin_read(TOUCH_LOGO);
-  while (input != 1) {
-    input = nrf_gpio_pin_read(TOUCH_LOGO);
-  }
-  uint32_t finish = read_timer();
-  uint32_t difference = finish - start;
-  if (difference > 500) {
-    sm_state = 1;
-  }
-}
-
 static void check_touch(void* _unused) {
   button_0();
 
@@ -98,6 +82,10 @@ void touch_init(void){
   app_timer_create(&touch_timer, APP_TIMER_MODE_REPEATED, check_touch);
   app_timer_start(touch_timer, 16384, NULL);
   sm_state = 0;
+  
+  //NRF_GPIOTE->CONFIG[0] = 0x00012201;   //...0XX01XX100010XXXXXX01
+                                        // configures GPIOTE on touch logo, port 1, pin 4, low to high mode
+  //NVIC_EnableIRQ(GPIOTE_IRQn);
 }
 
 uint8_t get_state(void) {
