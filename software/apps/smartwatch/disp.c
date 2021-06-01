@@ -160,6 +160,7 @@ static void disp_time(void* _unused) {
   num_to_led(m_tens, 3);
   num_to_led(m_ones, 4);
   led_state[2][2] = !(t.s % 2);
+  led_state[2][0] = 0;
   led_state[2][1] = 0;
   led_state[2][4] = !(t.s % 2);
   led_state[2][3] = 0;
