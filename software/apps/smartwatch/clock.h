@@ -10,4 +10,5 @@ typedef struct time_struct {
 
 void clock_init(uint8_t hour, uint8_t min, uint8_t sec);
 static void clock_inc(void* _unused);
+void clock_set(bool dir);
 time_struct get_time();
