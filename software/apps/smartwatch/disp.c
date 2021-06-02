@@ -1,6 +1,20 @@
 #include "nrf_gpio.h"
 #include "disp.h"
 #include "microbit_v2.h"
+#include "app_error.h"
+#include "app_timer.h"
+#include "nrf.h"
+#include "nrf_delay.h"
+#include "nrf_gpio.h"
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_default_backends.h"
+#include "nrf_pwr_mgmt.h"
+#include "nrf_serial.h"
+
+#include "microbit_v2.h"
+#include "virtual_timer.h"
+
 
 #include "clock.h"
 #include "touch_sensor.h"
@@ -56,12 +70,15 @@ void disp_init(void){
   nrf_gpio_pin_dir_set(BTN_A, NRF_GPIO_PIN_DIR_INPUT); // button A
   nrf_gpio_pin_dir_set(BTN_B, NRF_GPIO_PIN_DIR_INPUT); // button B
   
-  app_timer_create(&LEDtimer, APP_TIMER_MODE_REPEATED, disp_show);
+  virtual_timer_init();
+  
+  //app_timer_create(&LEDtimer, APP_TIMER_MODE_REPEATED, disp_show);
   app_timer_create(&clock_timer, APP_TIMER_MODE_REPEATED, disp_time);
   app_timer_create(&state_machine_timer, APP_TIMER_MODE_REPEATED, check_state);
   app_timer_create(&ped_timer, APP_TIMER_MODE_REPEATED, disp_steps);
   app_timer_create(&cd_timer, APP_TIMER_MODE_REPEATED, disp_cd);
-  app_timer_start(LEDtimer, 65, NULL);
+  //app_timer_start(LEDtimer, 65, NULL);
+  virtual_timer_start(1000, disp_show);
   app_timer_start(state_machine_timer, 8198, NULL);
 }
 
@@ -108,6 +125,12 @@ static void check_state(void* _unused) {
 
 static void disp_show(void* _unused) {
   // this function cycles through the rows and sets each row correctly
+  nrf_gpio_pin_clear(LED_ROW1);
+  nrf_gpio_pin_clear(LED_ROW2);
+  nrf_gpio_pin_clear(LED_ROW3);
+  nrf_gpio_pin_clear(LED_ROW4);
+  nrf_gpio_pin_clear(LED_ROW5);
+  
   switch(col) {
     case(0):
       nrf_gpio_pin_set(LED_COL5);
