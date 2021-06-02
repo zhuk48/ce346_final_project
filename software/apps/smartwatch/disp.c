@@ -72,7 +72,7 @@ void disp_init(void){
   
   virtual_timer_init();
   
-  //app_timer_create(&LEDtimer, APP_TIMER_MODE_REPEATED, disp_show);
+  app_timer_create(&LEDtimer, APP_TIMER_MODE_REPEATED, disp_show);
   app_timer_create(&clock_timer, APP_TIMER_MODE_REPEATED, disp_time);
   app_timer_create(&state_machine_timer, APP_TIMER_MODE_REPEATED, check_state);
   app_timer_create(&ped_timer, APP_TIMER_MODE_REPEATED, disp_steps);
@@ -82,46 +82,7 @@ void disp_init(void){
   app_timer_start(state_machine_timer, 8198, NULL);
 }
 
-static void check_state(void* _unused) {
-  led_state[curr_state][0] = 1;
-  curr_state = get_state();
-  
-  switch(curr_state) {
-    case(0):
-      app_timer_stop(ped_timer);
-      app_timer_stop(cd_timer);
-      app_timer_start(clock_timer, 16384, NULL);
-      if (nrf_gpio_pin_read(BTN_A) == 0) {
-        clock_set(false);
-      }
-      if (nrf_gpio_pin_read(BTN_B) == 0) {
-        clock_set(true);
-      }
-      break;
-      
-    case(1):
-      app_timer_stop(clock_timer);
-      app_timer_stop(cd_timer);
-      app_timer_start(ped_timer, 16384, NULL);
-      if (nrf_gpio_pin_read(BTN_A) == 0 || nrf_gpio_pin_read(BTN_B) == 0) {
-        clear_steps();
-      }
-      break;
-      
-    case(2):
-      app_timer_stop(clock_timer);
-      app_timer_stop(ped_timer);
-      app_timer_start(cd_timer, 16384, NULL);
-      if (nrf_gpio_pin_read(BTN_A) == 0) {
-        countdown_set();
-      }
-      if (nrf_gpio_pin_read(BTN_B) == 0) {
-        countdown_start_stop();
-      }
-      break;
-  }
-    
-}
+
 
 static void disp_show(void* _unused) {
   // this function cycles through the rows and sets each row correctly
@@ -223,4 +184,48 @@ static void num_to_led(uint8_t num, uint8_t col_index) {
   }
 }
 
+
+static void check_state(void* _unused) {
+  
+  curr_state = get_state();
+  
+  switch(curr_state) {
+    case(0):
+      //app_timer_stop(ped_timer);
+      //app_timer_stop(cd_timer);
+      //app_timer_start(clock_timer, 16384, NULL);
+      disp_time(NULL);
+      if (nrf_gpio_pin_read(BTN_A) == 0) {
+        clock_set(false);
+      }
+      if (nrf_gpio_pin_read(BTN_B) == 0) {
+        clock_set(true);
+      }
+      break;
+      
+    case(1):
+      //app_timer_stop(clock_timer);
+      //app_timer_stop(cd_timer);
+      //app_timer_start(ped_timer, 16384, NULL);
+      disp_steps(NULL);
+      if (nrf_gpio_pin_read(BTN_A) == 0 || nrf_gpio_pin_read(BTN_B) == 0) {
+        clear_steps();
+      }
+      break;
+      
+    case(2):
+      //app_timer_stop(clock_timer);
+      //app_timer_stop(ped_timer);
+      //app_timer_start(cd_timer, 16384, NULL);
+      disp_cd(NULL);
+      if (nrf_gpio_pin_read(BTN_A) == 0) {
+        countdown_set();
+      }
+      if (nrf_gpio_pin_read(BTN_B) == 0) {
+        countdown_start_stop();
+      }
+      break;
+  }
+    led_state[curr_state][0] = 1;
+}
 
