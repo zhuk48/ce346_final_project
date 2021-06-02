@@ -4,8 +4,10 @@
 
 #include "app_timer.h"
 
+#include "pwm_tone.h"
+
 bool timer_running = false;
-uint32_t time_left = 0; // in seconds
+uint16_t time_left = 0; // in seconds
 APP_TIMER_DEF(one_sec);
 
 static void decrement(void* _unused) {
@@ -13,7 +15,7 @@ static void decrement(void* _unused) {
     // do something when timer expries
     timer_running = false;
     app_timer_stop(one_sec);
-    // play tone
+    pwm_play();
   } else {
     time_left--;
   }
@@ -44,10 +46,6 @@ void countdown_start_stop(void) {
   }
 }
 
-uint8_t get_time_remain(void) {
+uint16_t get_time_remain(void) {
   return time_left;
-}
-
-bool get_countdown_running(void) {
-  return timer_running;
 }

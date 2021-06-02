@@ -181,7 +181,7 @@ static void disp_steps(void* _unused){
 }
 
 static void disp_cd(void* _unused) {
-  uint32_t rem = get_time_remain();
+  uint16_t rem = get_time_remain();
   uint8_t rem_m_tens = (rem / 60) / 10;
   uint8_t rem_m_ones = (rem / 60) % 10;
   uint8_t rem_s_tens = (rem % 60) / 10;
