@@ -27,7 +27,7 @@ static void button_0(void) {
   nrfx_gpiote_in_event_disable(TOUCH_RING0);
   uint32_t diff = finish0 - start0;
   
-  if (diff > 1500) {
+  if (diff > 500) {
     sm_state = 0;
   }
 }
@@ -37,7 +37,7 @@ static void button_1(void) {
   nrfx_gpiote_in_event_disable(TOUCH_RING1);
   uint32_t diff = finish1 - start1;
   
-  if (diff > 1500) {
+  if (diff > 750) {
     sm_state = 1;
   }
 }
@@ -48,7 +48,7 @@ static void button_2(void) {
   uint32_t diff = finish2 - start2;
   
   
-  if (diff > 1500) {
+  if (diff > 750) {
     sm_state = 2;
   }
 }
@@ -96,7 +96,7 @@ void touch_init(void){
   nrfx_gpiote_in_event_disable(TOUCH_RING2);
   
   app_timer_create(&touch_timer, APP_TIMER_MODE_REPEATED, check_touch);
-  app_timer_start(touch_timer, 8192, NULL);
+  app_timer_start(touch_timer, 4096, NULL);
   sm_state = 0;
 }
 
